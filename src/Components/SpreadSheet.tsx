@@ -83,6 +83,10 @@ function SpreadSheet({ documentName }: SpreadSheetProps) {
    */
   async function onCommandButtonClick(text: string): Promise<void> {
 
+    // check to see if the user name is empty
+    if (!checkUserLogin()) {
+      return;
+    }
 
     switch (text) {
       case ButtonNames.edit_toggle:
@@ -117,6 +121,10 @@ function SpreadSheet({ documentName }: SpreadSheetProps) {
    * */
   function onButtonClick(event: React.MouseEvent<HTMLButtonElement>): void {
 
+    // check to see if the user name is empty
+    if (!checkUserLogin()) {
+      return;
+    }
     const text = event.currentTarget.textContent;
     let trueText = text ? text : "";
     spreadSheetClient.setEditStatus(true);
@@ -137,6 +145,11 @@ function SpreadSheet({ documentName }: SpreadSheetProps) {
    */
   function onCellClick(event: React.MouseEvent<HTMLButtonElement>): void {
 
+    // check to see if the user name is empty
+    if (!checkUserLogin()) {
+      return;
+    }
+    
     const cellLabel = event.currentTarget.getAttribute("cell-label");
     // calculate the current row and column of the clicked on cell
 
@@ -156,6 +169,17 @@ function SpreadSheet({ documentName }: SpreadSheetProps) {
       updateDisplayValues();
     }
 
+  }
+  /**
+   * This fuction checks to see if the user name is empty.
+   * It will alert the user if the user name is empty.
+   */ 
+  function checkUserLogin(): boolean {
+    if (userName === "") {
+      alert("Please enter a user name");
+      return false;
+    }
+    return true;
   }
 
   return (
