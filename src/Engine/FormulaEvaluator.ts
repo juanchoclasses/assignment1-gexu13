@@ -51,36 +51,44 @@ export class FormulaEvaluator {
     this._result = formula.length;
     this._errorMessage = "";
 
-    switch (formula.length) {
-      case 0:
-        this._errorMessage = ErrorMessages.emptyFormula;
-        break;
-      case 7:
-        this._errorMessage = ErrorMessages.partial;
-        break;
-      case 8:
-        this._errorMessage = ErrorMessages.divideByZero;
-        break;
-      case 9:
-        this._errorMessage = ErrorMessages.invalidCell;
-        break;
-      case 10:
-        this._errorMessage = ErrorMessages.invalidFormula;
-        break;
-      case 11:
-        this._errorMessage = ErrorMessages.invalidNumber;
-        break;
-      case 12:
-        this._errorMessage = ErrorMessages.invalidOperator;
-        break;
-      case 13:
-        this._errorMessage = ErrorMessages.missingParentheses;
-        break;
-      default:
-        this._errorMessage = "";
-        break;
+    // Define a stack for the results
+    let resultStack: number[] = [];
+    // Define a stack for the operators
+    let operatorStack: string[] = [];
+
+    // Define a dictionary for the operators and their precedence
+    const precedence: { [key : string]: number } = {
+      '+': 1,
+      '-': 1,
+      '*': 2,
+      '/': 2,
+    };
+
+    // loop through the formula tokens
+    for (const token of formula) {
+      // if the token is a number push it on the result stack
+      if (this.isNumber(token)) {
+        resultStack.push(Number(token));
+      } else if (this.isCellReference(token)) {
+        // if the token is a cell reference get the value of the cell and push it on the result stack
+        let [value, error] = this.getCellValue(token);
+        if (error !== "") {
+          this._errorOccured = true;
+          this._errorMessage = error;
+          return;
+        }
+        resultStack.push(value);
+      } 
     }
+
+    this._result = resultStack.pop() || 0;
+    
+
+    // implement the evaluator
+
   }
+
+
 
   public get error(): string {
     return this._errorMessage
@@ -90,8 +98,13 @@ export class FormulaEvaluator {
     return this._result;
   }
 
-
-
+  /**
+   * @param token
+   * @returns true if the token is an operator
+   */
+  private isOperator(token: TokenType): boolean {
+    return token === "+" || token === "-" || token === "*" || token === "/";
+  }
 
   /**
    * 
