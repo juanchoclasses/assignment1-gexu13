@@ -164,13 +164,6 @@ export class FormulaEvaluator {
       this._errorOccured = true;
       this._errorMessage = ErrorMessages.invalidFormula;
     }
-    // if (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] === "(") {
-    //   this._errorOccured = true;
-    //   this._errorMessage = ErrorMessages.invalidOperator;
-    // }
-    // if (this._errorOccured){
-    //   this._errorMessage = errorMessages;
-    // }
   }
 
 
