@@ -89,6 +89,14 @@ export class FormulaEvaluator {
         operatorStack.push(token);
       }
       else if (token === ')') {
+        // missing left parenthesis
+        if (operatorStack.length === 0 
+              || (operatorStack[operatorStack.length - 1] === '(' && resultStack.length === 0)) {
+          this._result = 0;
+          this._errorOccured = true;
+          this._errorMessage = ErrorMessages.missingParentheses;
+          return;
+        }
         // if the token is a right parenthesis
         // while the operator stack is not empty and the top of the operator stack is not a left parenthesis
         // pop the top of the operator stack and push it on the result stack
@@ -122,7 +130,7 @@ export class FormulaEvaluator {
           if (resultStack.length < 2) {
             this._errorOccured = true;
             this._errorMessage = ErrorMessages.invalidFormula;
-            
+
             break;
           } else {
             const operator = operatorStack.pop() as string;
@@ -151,12 +159,15 @@ export class FormulaEvaluator {
     if (resultStack.length === 1 && operatorStack.length === 0) {
       this._result = resultStack.pop() as number;
     }
-    if (resultStack.length > 1) {
+    if (resultStack.length > 1 || operatorStack.length > 0) {
       this._result = resultStack.pop() as number;
       this._errorOccured = true;
       this._errorMessage = ErrorMessages.invalidFormula;
     }
-
+    // if (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] === "(") {
+    //   this._errorOccured = true;
+    //   this._errorMessage = ErrorMessages.invalidOperator;
+    // }
     // if (this._errorOccured){
     //   this._errorMessage = errorMessages;
     // }
