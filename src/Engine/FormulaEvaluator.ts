@@ -190,14 +190,6 @@ export class FormulaEvaluator {
     return this._result;
   }
 
-  // /**
-  //  * @param token
-  //  * @returns true if the token is an operator
-  //  */
-  // private isOperator(token: TokenType): boolean {
-  //   console.log("token", token);
-  //   return token === "+" || token === "-" || token === "*" || token === "/";
-  // }
 
   /**
    * 
