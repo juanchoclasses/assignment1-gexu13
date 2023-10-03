@@ -51,7 +51,101 @@ export class FormulaEvaluator {
     this._result = formula.length;
     this._errorMessage = "";
 
+    let errorMessages = "";
 
+    // Define a stack for the results
+    let resultStack: number[] = [];
+    // Define a stack for the operators
+    let operatorStack: string[] = [];
+
+    // Define a dictionary for the operators and their precedence
+    const precedence: { [key: string]: number } = {
+      '+': 1,
+      '-': 1,
+      '*': 2,
+      '/': 2,
+    };
+
+    // loop through the formula tokens
+    for (const token of formula) {
+      // if the token is a number push it on the result stack
+      if (this.isNumber(token)) {
+        resultStack.push(Number(token));
+      } else if (this.isCellReference(token)) {
+        // if the token is a cell reference get the value of the cell and push it on the result stack
+        let [value, error] = this.getCellValue(token);
+        if (error !== "") {
+          // this._errorOccured = true;
+          errorMessages = error;
+        } else {
+          resultStack.push(Number(value));
+        }
+      } else if (token === '(') {
+        // if the token is a left parenthesis push it on the operator stack
+        operatorStack.push(token);
+      }
+      else if (token === ')') {
+        // if the token is a right parenthesis
+        // while the operator stack is not empty and the top of the operator stack is not a left parenthesis
+        // pop the top of the operator stack and push it on the result stack
+        while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] !== '(') {
+          const operator = operatorStack.pop() as string;
+          const operand2 = resultStack.pop() as number;
+          const operand1 = resultStack.pop() as number;
+          const result = this.performOperation(operand1, operand2, operator);
+          resultStack.push(result);
+        }
+        // if the operator stack is not empty and the top of the operator stack is a left parenthesis
+        // pop the top of the operator stack
+        if (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] === '(') {
+          operatorStack.pop();
+        } else {
+          // if the operator stack is empty or the top of the operator stack is not a left parenthesis
+          // set the error flag and error message
+          this._errorOccured = true;
+          this._errorMessage = ErrorMessages.missingParentheses;
+          break;
+        }
+      }
+      else {
+        // if the token is an operator
+        // while the operator stack is not empty and the top of the operator stack is not a left parenthesis
+        // and the precedence of the token is less than or equal to the precedence of the top of the operator stack
+        // pop the top of the operator stack and push it on the result stack
+        // push the token on the operator stack
+        while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] !== "("
+          && precedence[token] <= precedence[operatorStack[operatorStack.length - 1]]) {
+          if (resultStack.length < 2) {
+            // this._errorOccured = true;
+            errorMessages = ErrorMessages.invalidFormula;
+            break;
+          } else {
+            const operator = operatorStack.pop() as string;
+            const operand2 = resultStack.pop() as number;
+            const operand1 = resultStack.pop() as number;
+            const result = this.performOperation(operand1, operand2, operator);
+            resultStack.push(result);
+          }
+        }
+        operatorStack.push(token);
+      }
+    }
+
+    // while the operator stack is not empty and the result stack has at least 2 operands
+    // pop the top of the operator stack and push it on the result stack
+    while (operatorStack.length > 0 && resultStack.length >= 2) {
+      const operator = operatorStack.pop() as string;
+      const operand2 = resultStack.pop() as number;
+      const operand1 = resultStack.pop() as number;
+      const result = this.performOperation(operand1, operand2, operator);
+      resultStack.push(result);
+    }
+
+    if (resultStack.length === 1 && operatorStack.length === 0) {
+      this._result = resultStack.pop() as number;
+    } else {
+      this._errorMessage = errorMessages;
+    }
   }
 
 
