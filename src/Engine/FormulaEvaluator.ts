@@ -45,18 +45,22 @@ export class FormulaEvaluator {
 
   evaluate(formula: FormulaType) {
 
-
     // set the this._result to the length of the formula
 
-    this._result = formula.length;
+    this._result = 0;
+    this._errorMessage = ErrorMessages.emptyFormula;
+
+    // if the formula is empty return 0
+    if (formula.length === 0) {
+      return;
+    }
     this._errorMessage = "";
 
-    let errorMessages = "";
 
     // Define a stack for the results
-    let resultStack: number[] = [];
+    const resultStack: number[] = [];
     // Define a stack for the operators
-    let operatorStack: string[] = [];
+    const operatorStack: string[] = [];
 
     // Define a dictionary for the operators and their precedence
     const precedence: { [key: string]: number } = {
@@ -75,8 +79,8 @@ export class FormulaEvaluator {
         // if the token is a cell reference get the value of the cell and push it on the result stack
         let [value, error] = this.getCellValue(token);
         if (error !== "") {
-          // this._errorOccured = true;
-          errorMessages = error;
+          this._errorOccured = true;
+          this._errorMessage = error;
         } else {
           resultStack.push(Number(value));
         }
@@ -116,8 +120,9 @@ export class FormulaEvaluator {
         while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] !== "("
           && precedence[token] <= precedence[operatorStack[operatorStack.length - 1]]) {
           if (resultStack.length < 2) {
-            // this._errorOccured = true;
-            errorMessages = ErrorMessages.invalidFormula;
+            this._errorOccured = true;
+            this._errorMessage = ErrorMessages.invalidFormula;
+            
             break;
           } else {
             const operator = operatorStack.pop() as string;
@@ -131,6 +136,7 @@ export class FormulaEvaluator {
       }
     }
 
+
     // while the operator stack is not empty and the result stack has at least 2 operands
     // pop the top of the operator stack and push it on the result stack
     while (operatorStack.length > 0 && resultStack.length >= 2) {
@@ -141,11 +147,19 @@ export class FormulaEvaluator {
       resultStack.push(result);
     }
 
+    
     if (resultStack.length === 1 && operatorStack.length === 0) {
       this._result = resultStack.pop() as number;
-    } else {
-      this._errorMessage = errorMessages;
     }
+    if (resultStack.length > 1) {
+      this._result = resultStack.pop() as number;
+      this._errorOccured = true;
+      this._errorMessage = ErrorMessages.invalidFormula;
+    }
+
+    // if (this._errorOccured){
+    //   this._errorMessage = errorMessages;
+    // }
   }
 
 
@@ -180,8 +194,6 @@ export class FormulaEvaluator {
     }
   }
 
-
-
   public get error(): string {
     return this._errorMessage
   }
@@ -189,7 +201,6 @@ export class FormulaEvaluator {
   public get result(): number {
     return this._result;
   }
-
 
   /**
    * 
