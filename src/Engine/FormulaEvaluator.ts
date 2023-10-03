@@ -51,41 +51,39 @@ export class FormulaEvaluator {
     this._result = formula.length;
     this._errorMessage = "";
 
-    // Define a stack for the results
-    let resultStack: number[] = [];
-    // Define a stack for the operators
-    let operatorStack: string[] = [];
 
-    // Define a dictionary for the operators and their precedence
-    const precedence: { [key : string]: number } = {
-      '+': 1,
-      '-': 1,
-      '*': 2,
-      '/': 2,
-    };
+  }
 
-    // loop through the formula tokens
-    for (const token of formula) {
-      // if the token is a number push it on the result stack
-      if (this.isNumber(token)) {
-        resultStack.push(Number(token));
-      } else if (this.isCellReference(token)) {
-        // if the token is a cell reference get the value of the cell and push it on the result stack
-        let [value, error] = this.getCellValue(token);
-        if (error !== "") {
+
+  /**
+   * 
+   * @param operand1  the first operand
+   * @param operand2  the second operand
+   * @param operator  the operator
+   * @returns  the result of the operation
+   */
+  private performOperation(operand1: number, operand2: number, operator: string): number {
+    switch (operator) {
+      case '+':
+        return operand1 + operand2;
+      case '-':
+        return operand1 - operand2;
+      case '*':
+        return operand1 * operand2;
+      case '/':
+        if (operand2 !== 0) {
+          return operand1 / operand2;
+        } else {
           this._errorOccured = true;
-          this._errorMessage = error;
-          return;
+          this._errorMessage = ErrorMessages.divideByZero;
+          return Infinity;
         }
-        resultStack.push(value);
-      } 
+      // this should never happen
+      default:
+        this._errorOccured = true;
+        this._errorMessage = ErrorMessages.invalidOperator;
+        return 0;
     }
-
-    this._result = resultStack.pop() || 0;
-    
-
-    // implement the evaluator
-
   }
 
 
@@ -98,13 +96,14 @@ export class FormulaEvaluator {
     return this._result;
   }
 
-  /**
-   * @param token
-   * @returns true if the token is an operator
-   */
-  private isOperator(token: TokenType): boolean {
-    return token === "+" || token === "-" || token === "*" || token === "/";
-  }
+  // /**
+  //  * @param token
+  //  * @returns true if the token is an operator
+  //  */
+  // private isOperator(token: TokenType): boolean {
+  //   console.log("token", token);
+  //   return token === "+" || token === "-" || token === "*" || token === "/";
+  // }
 
   /**
    * 
